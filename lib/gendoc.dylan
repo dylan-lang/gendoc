@@ -11,15 +11,15 @@ define constant $libraries-to-document
   = vector("binary-data",
            "command-line-parser",
            "concurrency",
+           "dylan-tool",
            "http",
            "logging",
+           "melange",
            "strings",
            make(<doc>,
                 name: "testworks",
                 roots: #["documentation/users-guide/source/index.rst"]),
-           "uuid",
-           "melange",
-           "dylan-tool");
+           "uuid");
 
 /*
 .. To be documented: anaphora, atom-language-dylan, base64, command-interface,
@@ -42,6 +42,11 @@ define command-line <gendoc-command-line> ()
     help: "Root directory of the generated output",
     kind: <parameter-option>,
     default: ".";
+  option force-download? :: <boolean>,
+    names: #("force", "f"),
+    help: "Whether to force download of packages if already present",
+    kind: <flag-option>,
+    default: #f;
 end;
 
 define function main
@@ -51,7 +56,7 @@ define function main
   block ()
     parse-command-line(parser, application-arguments());
     let dir = as(<directory-locator>, source-directory(parser));
-    gendoc(directory: dir);
+    gendoc(directory: dir, force?: force-download?(parser));
   exception (err :: <abort-command-error>)
     let status = exit-status(err);
     if (status ~= 0)
@@ -94,9 +99,10 @@ end function;
 
 define function gendoc
     (#key directory :: <directory-locator> = fs/working-directory,
-          docs :: <sequence> = documents())
+          docs :: <sequence> = documents(),
+          force? :: <boolean>)
   let package-dir = subdirectory-locator(directory, $packages-subdirectory);
-  fetch-packages(docs, package-dir);
+  fetch-packages(docs, package-dir, force?);
 
   let index-file = merge-locators(as(<file-locator>, "index.rst"), directory);
   fs/with-open-file(stream = index-file,
@@ -106,13 +112,20 @@ define function gendoc
 end function;
 
 define function fetch-packages
-    (docs :: <sequence>, directory :: <directory-locator>)
+    (docs :: <sequence>, directory :: <directory-locator>, force? :: <boolean>)
   for (doc in docs)
     let package = doc-package(doc);
     let release = %pm/find-release(package, pm/$latest);
     let pkg-dir = subdirectory-locator(directory, pm/package-name(package));
-    fs/ensure-directories-exist(pkg-dir);
-    pm/download(release, pkg-dir, update-submodules?: #f);
+    if (force? & fs/file-exists?(pkg-dir))
+      format-out("Deleting %s because --force was used.\n", pkg-dir);
+      fs/delete-directory(pkg-dir);
+    end;
+    if (~fs/file-exists?(pkg-dir))
+      fs/ensure-directories-exist(pkg-dir);
+      pm/download(release, pkg-dir, update-submodules?: #f);
+    end;
+    force-out();
   end;
 end function;
 
@@ -121,7 +134,7 @@ define function string-parser (s) => (s) s end;
 define constant $toctree-template = #:string:"
 .. toctree::
    :maxdepth: 1
-   :caption: %s:
+   :caption: %s
 
 ";
 
@@ -165,7 +178,9 @@ define function gendoc-toctrees
         if (ends-with?(path, ".rst"))
           path := copy-sequence(path, end: path.size - 4);
         end;
-        format(stream, "   %s/%s\n", $packages-subdirectory, path);
+        let pkg-name = doc-package-name(doc);
+        format(stream, "   %s <%s/%s/%s>\n",
+               pkg-name, $packages-subdirectory, pkg-name, path);
       end for;
     end for;
   end for;

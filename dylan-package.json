@@ -3,6 +3,7 @@
         "command-line-parser",
         "dylan-tool",
     ],
+    "category": "development tools",
     "dev-dependencies": [
         "testworks"
     ],

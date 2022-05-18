@@ -16,7 +16,7 @@ import sys
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('sphinx-extensions/sphinxcontrib'))
+sys.path.insert(0, os.path.abspath('../documentation/sphinx-extensions/sphinxcontrib'))
 
 import dylan.domain
 import dylan.themes as dylan_themes
@@ -61,8 +61,15 @@ exclude_patterns = [
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-html_theme = 'alabaster'
+html_theme = dylan_themes.get_html_theme_default()
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = dylan_themes.get_html_theme_options_default()
+
+# Add any paths that contain custom themes here, relative to this directory.
+html_theme_path = [dylan_themes.get_html_theme_path()]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

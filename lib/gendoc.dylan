@@ -9,8 +9,11 @@ define constant $packages-subdirectory = "packages";
 // <repo>/documentation/source/index.rst, or (2) a <doc> instance.
 define constant $libraries-to-document
   = vector("binary-data",
+           "command-line-parser",
            "concurrency",
            "http",
+           "logging",
+           "strings",
            make(<doc>,
                 name: "testworks",
                 roots: #["documentation/users-guide/source/index.rst"]),
@@ -27,7 +30,7 @@ define constant $libraries-to-document
 
 .. To be moved out of OD: collection-extensions, command-line-parser,
    dylan-emacs-support (under tools), hash-algorithms, lisp-to-dylan (tools),
-   logging, lsp-dylan (tools), regular-expressions, strings, vscode-dylan
+   lsp-dylan (tools), regular-expressions, strings, vscode-dylan
    (tools)
 
 .. Move testworks docs out of user-guide subdirectory

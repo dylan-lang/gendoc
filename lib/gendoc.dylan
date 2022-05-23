@@ -15,6 +15,7 @@ define constant $libraries-to-document
            "http",
            "logging",
            "melange",
+           "sphinx-extensions",
            "strings",
            "testworks",
            "uuid");

@@ -16,9 +16,7 @@ define constant $libraries-to-document
            "logging",
            "melange",
            "strings",
-           make(<doc>,
-                name: "testworks",
-                roots: #["documentation/users-guide/source/index.rst"]),
+           "testworks",
            "uuid");
 
 /*
@@ -131,35 +129,64 @@ end function;
 
 define function string-parser (s) => (s) s end;
 
-define constant $toctree-template = #:string:"
+define constant $header = #:string:"
+********************************
+Dylan Library and Tool Reference
+********************************
+
+Documentation for libraries in the Dylan package catalog.
+
+.. note:: The documentation for some libraries is still part of the Open Dylan
+   project, available `here <https://opendylan.org/documentation/library-reference>`_.
+   Over time more of those library docs will be hosted here.
+
 .. toctree::
    :maxdepth: 1
-   :caption: %s
+   :caption: Libraries
 
 ";
 
-define function gendoc-to-stream
-    (stream :: <stream>, docs :: <sequence>)
-  format(stream, #:string:"
-Dylan Library and Tool Reference
-================================
-
-Documentation for all libraries in the Dylan package catalog.
-
-");
-  gendoc-toctrees(stream, docs);
-  format(stream, #:string:"
+define constant $footer = #:string:"
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
-");
+";
+
+define function gendoc-to-stream
+    (stream :: <stream>, docs :: <sequence>)
+  io/write(stream, $header);
+  generate-table-of-contents-alphabetized(stream, docs);
+  io/write(stream, $footer);
 end function;
 
-define function gendoc-toctrees
+define function generate-table-of-contents-alphabetized
+    (stream :: <stream>, docs :: <sequence>)
+  let docs = sort(docs, test: method (a, b)
+                                doc-package-name(a) < doc-package-name(b)
+                              end);
+  for (doc in docs)
+    let pkg-name = doc-package-name(doc);
+    for (path in doc-roots(doc))
+      if (ends-with?(path, ".rst"))
+        path := copy-sequence(path, end: path.size - ".rst".size);
+      end;
+      let pkg-name = doc-package-name(doc);
+      // TODO: really want a way to include a one sentence description of the
+      // package here, outside of the link text, and without it being included
+      // in the left nav toctree, but Sphinx doesn't appear to be that
+      // flexible.
+      format(stream, "   %s <%s/%s/%s>\n",
+             pkg-name,
+             $packages-subdirectory, pkg-name, path);
+    end for;
+  end
+end function;
+
+/*
+define function generate-table-of-contents-categorized
     (stream :: <stream>, docs :: <sequence>)
   let docs-by-category = make(<istring-table>);
   for (doc in docs)
@@ -185,3 +212,35 @@ define function gendoc-toctrees
     end for;
   end for;
 end function;
+
+// Search for the first '.' that is < maxlen characters from the beginning. If
+// not found, elide at the nearest whitespace.
+
+// (Copied from dylan-tool as a quick hack...should be unified/moved to pacman.)
+define method brief-description
+    (package :: pm/<package>, #key maxlen = 90) => (_ :: <string>)
+  let text = pm/package-description(package);
+  if (text.size < maxlen)
+    text
+  else
+    let space = #f;
+    let pos = #f;
+    iterate loop (p = min(text.size - 1, maxlen))
+      case
+        p <= 0         => #f;
+        text[p] == '.' => pos := p + 1;
+        otherwise      =>
+          if (whitespace?(text[p]) & (~space | space == p + 1))
+            space := p;
+          end;
+          loop(p - 1);
+      end;
+    end iterate;
+    case
+      pos => copy-sequence(text, end: pos);
+      space => concatenate(copy-sequence(text, end: space), "...");
+      otherwise => text;
+    end
+  end if
+end method;
+*/

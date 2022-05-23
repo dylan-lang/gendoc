@@ -8,7 +8,7 @@ define library gendoc-lib
   use dylan-tool-lib,
     import: { pacman, %pacman };
   use io,
-    import: { format, format-out };
+    import: { format, format-out, streams };
   use logging;
   use strings;
   use system,
@@ -34,6 +34,8 @@ define module gendoc-impl
   // TODO: export find-release from pacman
   use %pacman,
     prefix: "%pm/";
+  use streams,
+    prefix: "io/";
   use strings;
   use table-extensions,
     rename: { <case-insensitive-string-table> => <istring-table> };

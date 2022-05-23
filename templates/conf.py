@@ -53,7 +53,11 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     '_build', 'Thumbs.db', '.DS_Store',
-    '**/submodules', '**/ext'   # Submodules may contain duplicate docs.
+    # Submodules may cause docs to be duplicated because Sphinx automatically
+    # finds all .rst files.
+    '**/submodules', '**/ext',
+    # Prevent "README.rst: WARNING: document isn't included in any toctree".
+    '**/README.rst'
 ]
 
 

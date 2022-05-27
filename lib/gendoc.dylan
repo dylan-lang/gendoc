@@ -12,28 +12,26 @@ define constant $libraries-to-document
            "command-line-parser",
            "concurrency",
            "dylan-tool",
+           "hash-algorithms",
            "http",
            "logging",
            "melange",
+           "regular-expressions",
            "sphinx-extensions",
            "strings",
            "testworks",
            "uuid");
 
-/*
-.. To be documented: anaphora, atom-language-dylan, base64, command-interface,
-   json, mime, pacman-catalog, peg-parser, priority-queue, sequence-stream,
-   serialization, shootout, skip-list, slot-visitor, sphinx-extensions (tools),
-   uncommon-dylan, uri, uuid, web-framework, wrapper-streams, xml-parser,
-   xml-rpc, zlib
+/* To be documented: anaphora, atom-language-dylan, base64,
+   collection-extensions, command-interface, dylan-emacs-support, json,
+   lisp-to-dylan, lsp-dylan, mime, pacman-catalog, peg-parser, priority-queue,
+   sequence-stream, serialization, shootout, skip-list, slot-visitor,
+   sphinx-extensions (tools), uncommon-dylan, uri, uuid, vscode-dylan,
+   web-framework, wrapper-streams, xml-parser, xml-rpc, zlib
 
-.. To be moved out of OD: collection-extensions, command-line-parser,
-   dylan-emacs-support (under tools), hash-algorithms, lisp-to-dylan (tools),
-   lsp-dylan (tools), regular-expressions, strings, vscode-dylan
-   (tools)
+  skip-list has some docs in the Hackers Guide, used as example doc.
 
-.. Move testworks docs out of user-guide subdirectory
-*/
+ */
 
 define command-line <gendoc-command-line> ()
   option source-directory :: <string>,

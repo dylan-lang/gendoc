@@ -60,8 +60,6 @@ define function main
       format-err("Error: %s\n", err);
     end;
     status
-  exception (err :: <error>)
-    log-error("%s", condition-to-string(err));
   end
 end function;
 

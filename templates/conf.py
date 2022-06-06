@@ -24,7 +24,7 @@ import dylan.themes as dylan_themes
 
 # -- Project information -----------------------------------------------------
 
-project = 'Dylan Library Reference'
+project = 'Dylan Package Docs'
 copyright = '2022, Dylan Hackers'
 author = 'Dylan Hackers'
 

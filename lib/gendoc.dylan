@@ -127,19 +127,21 @@ end function;
 define function string-parser (s) => (s) s end;
 
 define constant $header = #:string:"
-********************************
-Dylan Library and Tool Reference
-********************************
+******************
+Dylan Package Docs
+******************
 
-Documentation for libraries in the Dylan package catalog.
+Documentation for packages in the Dylan package catalog.
 
-.. note:: The documentation for some libraries is still part of the Open Dylan
-   project, available `here <https://opendylan.org/documentation/library-reference>`_.
-   Over time more of those library docs will be hosted here.
+.. note:: The documentation for some packages is still part of the Open Dylan
+   project, available in the `Library Reference
+   <https://opendylan.org/documentation/library-reference>`_.  Over time more
+   of those docs will be hosted here as they're moved into their own
+   repositories.
 
 .. toctree::
    :maxdepth: 1
-   :caption: Libraries
+   :caption: Packages
 
 ";
 

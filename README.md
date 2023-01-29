@@ -51,6 +51,8 @@ everything looks good. There should be zero errors during the build. If there
 are errors something went wrong or a package's documentation is broken.
 
 On the docs.opendylan.org machine, the generated HTML files can be installed
-with this command::
+with this command:
 
-  cp -r -p _build/html/* /var/www/docs.opendylan.org/
+```shell
+cp -r -p _build/html/* /var/www/docs.opendylan.org/
+```

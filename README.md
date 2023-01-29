@@ -49,3 +49,8 @@ $ _build/bin/gendoc -o docs
 It is up to you to run `make html` in the `docs` directory and verify that
 everything looks good. There should be zero errors during the build. If there
 are errors something went wrong or a package's documentation is broken.
+
+On the docs.opendylan.org machine, the generated HTML files can be installed
+with this command::
+
+  cp -r -p _build/html/* /var/www/docs.opendylan.org/

@@ -5,6 +5,7 @@
     ],
     "category": "development tools",
     "dev-dependencies": [
+        "sphinx-extensions",
         "testworks"
     ],
     "description": "Generate docs for all Dylan catalog libraries",

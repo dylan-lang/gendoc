@@ -5,7 +5,7 @@ define library gendoc-lib
     import: { table-extensions };
   use command-line-parser;
   use common-dylan;
-  use dylan-tool-lib,
+  use dylan-tool,
     import: { pacman, %pacman };
   use io,
     import: { format, format-out, streams };
@@ -16,7 +16,7 @@ define library gendoc-lib
 
   export
     gendoc-impl;
-end;
+end library;
 
 define module gendoc-impl
   use command-line-parser;
@@ -42,4 +42,4 @@ define module gendoc-impl
 
   export
     main;
-end;
+end module;

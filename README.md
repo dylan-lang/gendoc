@@ -28,25 +28,25 @@ ok. Three problems.
 Usage
 -----
 
-The Sphinx project files (conf.py, Makefile, etc.) already exist in the "docs"
-subdirectory. Run `gendoc` like so:
+The Sphinx project files (conf.py, Makefile, etc.) already exist in the
+"output" subdirectory. Run `gendoc` like so:
 
 ```
-$ _build/bin/gendoc -o docs
+$ _build/bin/gendoc -o output
 ```
 
 `gendoc` will
 
-1.  Create a `docs/packages` subdirectory and populate it with all the
+1.  Create a `output/packages` subdirectory and populate it with all the
     packages in the Dylan catalog that have documentation. (This list is
     hard-coded...update it and rebuild if necessary.)
 
-2.  Create `docs/index.rst` file that references the top-level `index.rst` file
+2.  Create `output/index.rst` file that references the top-level `index.rst` file
     in each package's documentation. By default this is
     `<pkg>/documentation/source/index.rst`, but this can be overridden manually
     in `gendoc.dylan` if necessary.
 
-It is up to you to run `make html` in the `docs` directory and verify that
+It is up to you to run `make html` in the `output` directory and verify that
 everything looks good. There should be zero errors during the build. If there
 are errors something went wrong or a package's documentation is broken.
 

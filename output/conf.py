@@ -36,8 +36,11 @@ author = 'Dylan Hackers'
 # ones.
 extensions = [
     'dylan.domain',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'sphinxcontrib.plantuml',
 ]
+
+plantuml = 'java -jar /usr/share/plantuml/plantuml.jar'
 
 # This makes it so that each document doesn't have to use
 #   .. default-domain:: dylan

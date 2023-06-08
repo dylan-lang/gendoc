@@ -6,7 +6,7 @@ define library gendoc-lib
   use command-line-parser;
   use common-dylan;
   use dylan-tool,
-    import: { pacman, %pacman };
+    import: { pacman, %pacman, shared };
   use io,
     import: { format, format-out, streams };
   use logging;
@@ -34,11 +34,16 @@ define module gendoc-impl
   // TODO: export find-release from pacman
   use %pacman,
     prefix: "%pm/";
+  use shared,                   // shared:dylan-tool
+    // Not dt/ - https://github.com/dylan-lang/dylan-emacs-support/issues/36
+    prefix: "dt_";
   use streams,
     prefix: "io/";
   use strings;
   use table-extensions,
     rename: { <case-insensitive-string-table> => <istring-table> };
+  use threads,
+    import: { dynamic-bind };
 
   export
     main;

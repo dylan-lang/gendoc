@@ -96,13 +96,15 @@ define function gendoc
     (#key directory :: <directory-locator> = fs/working-directory,
           docs :: <sequence> = documents(),
           force? :: <boolean>)
-  let package-dir = subdirectory-locator(directory, $packages-subdirectory);
-  fetch-packages(docs, package-dir, force?);
+  dynamic-bind (dt_*verbose?* = #t)
+    let package-dir = subdirectory-locator(directory, $packages-subdirectory);
+    fetch-packages(docs, package-dir, force?);
 
-  let index-file = merge-locators(as(<file-locator>, "index.rst"), directory);
-  fs/with-open-file(stream = index-file,
-                    direction: #"output", if-exists?: #"replace")
-    gendoc-to-stream(stream, docs)
+    let index-file = merge-locators(as(<file-locator>, "index.rst"), directory);
+    fs/with-open-file(stream = index-file,
+                      direction: #"output", if-exists?: #"replace")
+      gendoc-to-stream(stream, docs)
+    end;
   end;
 end function;
 

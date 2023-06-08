@@ -20,7 +20,8 @@ define constant $libraries-to-document
            "sphinx-extensions",
            "strings",
            "testworks",
-           "uuid");
+           "uuid",
+           "v3d");
 
 /* To be documented: anaphora, atom-language-dylan, base64,
    collection-extensions, command-interface, dylan-emacs-support, json,

@@ -36,6 +36,7 @@ author = 'Dylan Hackers'
 # ones.
 extensions = [
     'dylan.domain',
+    'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.plantuml',
 ]
@@ -66,30 +67,14 @@ exclude_patterns = [
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = dylan_themes.get_html_theme_default()
+html_theme = 'furo'             # https://pradyunsg.me/furo/customisation/
+html_theme_options = {
+    'sidebar_hide_name': True,
+    'light_logo': 'images/opendylan-light.png',
+    'dark_logo': 'images/opendylan-dark.png',
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = dylan_themes.get_html_theme_options_default()
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [dylan_themes.get_html_theme_path()]
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
-
-# intersphinx_mapping = {
-#     'binary-data': ('https://opendylan.org/documentation', None),
-#     'concurrency': ('https://opendylan.org/documentation', None),
-# }
-# intersphinx_mapping = {
-#     'hacker': ('https://opendylan.org/documentation/hacker-guide/', None),
-#     'http': ('https://opendylan.org/documentation/http/', None),
-#     'testworks': ('https://opendylan.org/documentation/testworks/', None)
-# }
-
+    # https://pradyunsg.me/furo/customisation/edit-button/
+    'source_repository': 'https://github.com/dylan-lang/website',
+    'source_branch': 'master',
+    'source_directory': 'source/',
+}

@@ -1,28 +1,6 @@
 Module: gendoc-impl
 
 
-// The directory into which packages are cloned.
-define constant $packages-subdirectory = "packages";
-
-// Each element takes one of two forms: (1) a string, in which case it's the
-// name of a package that has one top-level document in the standard location,
-// <repo>/documentation/source/index.rst, or (2) a <doc> instance.
-define constant $libraries-to-document
-  = vector("binary-data",
-           "command-line-parser",
-           "concurrency",
-           "dylan-tool",
-           "hash-algorithms",
-           "http",
-           "logging",
-           "melange",
-           "regular-expressions",
-           "sphinx-extensions",
-           "strings",
-           "testworks",
-           "uuid",
-           "v3d");
-
 /* To be documented: anaphora, atom-language-dylan, base64,
    collection-extensions, command-interface, dylan-emacs-support, json,
    lisp-to-dylan, lsp-dylan, mime, pacman-catalog, peg-parser, priority-queue,
@@ -34,17 +12,17 @@ define constant $libraries-to-document
 
  */
 
+// The directory into which package docs are generated, with a subdirectory
+// for each package.  This is singular because it will show up in the URL
+// lik this: .../package/http/
+define constant $packages-subdirectory = "package";
+
 define command-line <gendoc-command-line> ()
-  option source-directory :: <string>,
-    names: #("source-directory", "o"),
+  option output-directory :: <string>,
+    names: #("output-directory", "o"),
     help: "Root directory of the generated output",
     kind: <parameter-option>,
     default: ".";
-  option force-download? :: <boolean>,
-    names: #("force", "f"),
-    help: "Whether to force download of packages if already present",
-    kind: <flag-option>,
-    default: #f;
 end;
 
 define function main
@@ -53,8 +31,7 @@ define function main
                     help: "Generate docs for packages in the Dylan catalog");
   block ()
     parse-command-line(parser, application-arguments());
-    let dir = as(<directory-locator>, source-directory(parser));
-    gendoc(directory: dir, force?: force-download?(parser));
+    gendoc(as(<directory-locator>, output-directory(parser)))
   exception (err :: <abort-command-error>)
     let status = exit-status(err);
     if (status ~= 0)
@@ -64,72 +41,24 @@ define function main
   end
 end function;
 
-define class <doc> (<object>)
-  constant slot doc-package-name :: <string>,
-    required-init-keyword: name:;
-  // Root docs are relative to the repository root. e.g.,
-  // "documentation/source/user-guide/index.rst"
-  constant slot doc-roots :: <sequence>,
-    required-init-keyword: roots:;
-  slot doc-package :: false-or(pm/<package>) = #f;
-end class;
-
-// Canonicalize the given document specs into <doc> objects with their
-// doc-package slot filled in.
-define function documents
-    (#key document-specs = $libraries-to-document) => (docs :: <sequence>)
-  let catalog = pm/catalog();
-  map(method (spec)
-        let doc = spec;
-        if (instance?(spec, <string>))
-          doc := make(<doc>,
-                      name: spec,
-                      roots: #["documentation/source/index.rst"]);
-        end;
-        doc-package(doc)
-          := pm/find-package(catalog, doc-package-name(doc));
-        doc
-      end,
-      document-specs)
-end function;
-
 define function gendoc
-    (#key directory :: <directory-locator> = fs/working-directory,
-          docs :: <sequence> = documents(),
-          force? :: <boolean>)
+    (output-dir :: <directory-locator>)
   dynamic-bind (dt_*verbose?* = #t)
-    let package-dir = subdirectory-locator(directory, $packages-subdirectory);
-    fetch-packages(docs, package-dir, force?);
-
-    let index-file = merge-locators(as(<file-locator>, "index.rst"), directory);
-    fs/with-open-file(stream = index-file,
+    let packages = fetch-packages(output-dir);
+    let root-index-file = file-locator(output-dir, "index.rst");
+    fs/with-open-file(stream = root-index-file,
                       direction: #"output", if-exists?: #"replace")
-      gendoc-to-stream(stream, docs)
+      io/write(stream, $header);
+      generate-body-rst(stream, packages);
+
+      io/write(stream, $toctree);
+      generate-toctree-rst(stream, packages);
     end;
+    format-out("Generated docs for %d packages.\n", packages.size);
   end;
 end function;
 
-define function fetch-packages
-    (docs :: <sequence>, directory :: <directory-locator>, force? :: <boolean>)
-  for (doc in docs)
-    let package = doc-package(doc);
-    let release = %pm/find-release(package, pm/$latest);
-    let pkg-dir = subdirectory-locator(directory, pm/package-name(package));
-    if (force? & fs/file-exists?(pkg-dir))
-      format-out("Deleting %s because --force was used.\n", pkg-dir);
-      fs/delete-directory(pkg-dir);
-    end;
-    if (~fs/file-exists?(pkg-dir))
-      fs/ensure-directories-exist(pkg-dir);
-      pm/download(release, pkg-dir, update-submodules?: #f);
-    end;
-    force-out();
-  end;
-end function;
-
-define function string-parser (s) => (s) s end;
-
-define constant $header = #:string:"
+define constant $header = """
 ******************
 Dylan Package Docs
 ******************
@@ -142,107 +71,82 @@ Documentation for packages in the Dylan package catalog.
    of those docs will be hosted here as they're moved into their own
    repositories.
 
+""";
+
+define constant $toctree = """
 .. toctree::
+   :hidden:
    :maxdepth: 1
    :caption: Packages
 
-";
+""";
 
-define constant $footer = #:string:"
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-";
-
-define function gendoc-to-stream
-    (stream :: <stream>, docs :: <sequence>)
-  io/write(stream, $header);
-  generate-table-of-contents-alphabetized(stream, docs);
-  io/write(stream, $footer);
-end function;
-
-define function generate-table-of-contents-alphabetized
-    (stream :: <stream>, docs :: <sequence>)
-  let docs = sort(docs, test: method (a, b)
-                                doc-package-name(a) < doc-package-name(b)
-                              end);
-  for (doc in docs)
-    let pkg-name = doc-package-name(doc);
-    for (path in doc-roots(doc))
-      if (ends-with?(path, ".rst"))
-        path := copy-sequence(path, end: path.size - ".rst".size);
-      end;
-      let pkg-name = doc-package-name(doc);
-      // TODO: really want a way to include a one sentence description of the
-      // package here, outside of the link text, and without it being included
-      // in the left nav toctree, but Sphinx doesn't appear to be that
-      // flexible.
-      format(stream, "   %s <%s/%s/%s>\n",
-             pkg-name,
-             $packages-subdirectory, pkg-name, path);
-    end for;
-  end
-end function;
-
-/*
-define function generate-table-of-contents-categorized
-    (stream :: <stream>, docs :: <sequence>)
-  let docs-by-category = make(<istring-table>);
-  for (doc in docs)
-    let package = doc-package(doc);
-    let category = pm/package-category(package);
-    let cat-docs = element(docs-by-category, category, default: #());
-    docs-by-category[category] := pair(doc, cat-docs);
+define function generate-body-rst
+    (stream :: <stream>, packages :: <sequence>)
+  for (package in packages)
+    let pkg-name = package.pm/package-name;
+    format(stream, "* :doc:`%s/%s/index`", $packages-subdirectory, pkg-name);
+    let description = package.pm/package-description;
+    if (description)
+      // Remove newlines so the reST is valid.
+      format(stream, " - %s", join(split-lines(description), " "));
+    end;
+    format(stream, "\n");
   end;
-  for (category in sort(key-sequence(docs-by-category)))
-    let cat-docs = docs-by-category[category];
-    // TODO: there's no provision here for a single package having doc roots in
-    // more than one category. Seems like it would be rare?
-    format(stream, $toctree-template, category);
-    for (doc in cat-docs)
-      for (path in doc-roots(doc))
-        if (ends-with?(path, ".rst"))
-          path := copy-sequence(path, end: path.size - 4);
-        end;
-        let pkg-name = doc-package-name(doc);
-        format(stream, "   %s <%s/%s/%s>\n",
-               pkg-name, $packages-subdirectory, pkg-name, path);
-      end for;
-    end for;
-  end for;
 end function;
 
-// Search for the first '.' that is < maxlen characters from the beginning. If
-// not found, elide at the nearest whitespace.
+define function generate-toctree-rst
+    (stream :: <stream>, packages :: <sequence>)
+  for (package in packages)
+    let pkg-name = package.pm/package-name;
+    format(stream, "   %s <%s/%s/index>\n",
+           pkg-name, $packages-subdirectory, pkg-name);
+  end;
+end function;
 
-// (Copied from dylan-tool as a quick hack...should be unified/moved to pacman.)
-define method brief-description
-    (package :: pm/<package>, #key maxlen = 90) => (_ :: <string>)
-  let text = pm/package-description(package);
-  if (text.size < maxlen)
-    text
-  else
-    let space = #f;
-    let pos = #f;
-    iterate loop (p = min(text.size - 1, maxlen))
-      case
-        p <= 0         => #f;
-        text[p] == '.' => pos := p + 1;
-        otherwise      =>
-          if (whitespace?(text[p]) & (~space | space == p + 1))
-            space := p;
-          end;
-          loop(p - 1);
+// Fetch all packages in the pacman catalog. In order to simplify the
+// documentation URLs we remove the documentation/source/ part of the URL by
+// downloading to a temp directory and then renaming all files in
+// documentation/source/ to the package subdirectory where docs will be
+// generated.
+define function fetch-packages
+    (output-dir :: <directory-locator>) => (packages :: <sequence>)
+  let package-dir = subdirectory-locator(output-dir, $packages-subdirectory);
+  let all-packages
+    = sort(pm/load-all-catalog-packages(pm/catalog()),
+           test: method (a, b)
+                   a.pm/package-name < b.pm/package-name
+                 end);
+  let doc-packages = make(<stretchy-vector>);
+  let scratch-dir = subdirectory-locator(fs/working-directory(), "gendoc-scratch-dir");
+  fs/ensure-directories-exist(package-dir);
+  fs/ensure-directories-exist(scratch-dir);
+  for (package in all-packages)
+    let pkg-name = pm/package-name(package);
+    let package-subdir = subdirectory-locator(package-dir, pkg-name);
+    let scratch-subdir = subdirectory-locator(scratch-dir, pkg-name);
+    if (fs/file-exists?(scratch-subdir))
+      fs/delete-directory(scratch-subdir, recursive?: #t);
+    end;
+    if (fs/file-exists?(package-subdir))
+      fs/delete-directory(package-subdir, recursive?: #t);
+    end;
+    let release = %pm/find-release(package, pm/$latest);
+    pm/download(release, scratch-subdir, update-submodules?: #f);
+    let source-dir = subdirectory-locator(scratch-subdir, "documentation", "source");
+    if (~fs/file-exists?(source-dir))
+      // TODO: Check for docs/source/ and doc/source/ as well.
+      format-out("%s: no documentation; skipping.\n", pkg-name);
+    else
+      add!(doc-packages, package);
+      fs/ensure-directories-exist(package-subdir);
+      for (file in fs/directory-contents(source-dir))
+        let dest = merge-locators(relative-locator(file, source-dir),
+                                  package-subdir);
+        fs/rename-file(file, dest);
       end;
-    end iterate;
-    case
-      pos => copy-sequence(text, end: pos);
-      space => concatenate(copy-sequence(text, end: space), "...");
-      otherwise => text;
-    end
-  end if
-end method;
-*/
+    end;
+    force-out();
+  end;
+  doc-packages
+end function;

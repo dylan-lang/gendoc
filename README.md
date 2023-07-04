@@ -7,7 +7,7 @@ library reference](http://opendylan.org/documentation/library-reference).
 
 Why?  Because it shouldn't be necessary to include your library docs in the
 Open Dylan repository or the [opendylan.org
-repo](https://github.com/dylan-lang/website) in order to have them
+website repo](https://github.com/dylan-lang/website) in order to have them
 published. You should be able to make a package, write docs, and get it added
 to the shared documentation pages.
 
@@ -37,10 +37,9 @@ Summary:
     4.  `mkdir _images _plantuml`
     5.  `chown foo:foo _images _plantuml` where foo is the user your web
          server is running as.
-2.  `make` -- build gendoc
-3.  `_build/bin/gendoc -o output`
-4.  `cd output; make html`
-5.  `cp -r -p _build/html/* /var/www/docs.opendylan.org/`
+2.  `make docs` -- build and run gendoc
+3.  `cd output; make html`
+4.  `cp -r -p _build/html/* /var/www/docs.opendylan.org/`
 
 Keep reading for a few extra details....
 

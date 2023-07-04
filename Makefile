@@ -14,5 +14,5 @@ clean:
 
 cleandocs:
 	rm -rf output/index.rst
-	rm -rf output/packages
+	rm -rf output/package
 	rm -rf output/_build

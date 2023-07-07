@@ -15,7 +15,7 @@ Module: gendoc-impl
 // The directory into which package docs are generated, with a subdirectory
 // for each package.  This is singular because it will show up in the URL
 // lik this: .../package/http/
-define constant $packages-subdirectory = "package";
+define constant $package-subdirectory = "package";
 
 define command-line <gendoc-command-line> ()
   option output-directory :: <string>,
@@ -45,7 +45,7 @@ define function gendoc
     (output-dir :: <directory-locator>)
   dynamic-bind (dt_*verbose?* = #t)
     let packages = fetch-packages(output-dir);
-    let root-index-file = file-locator(output-dir, "index.rst");
+    let root-index-file = file-locator(output-dir, $package-subdirectory, "index.rst");
     fs/with-open-file(stream = root-index-file,
                       direction: #"output", if-exists?: #"replace")
       io/write(stream, $header);
@@ -85,7 +85,7 @@ define function generate-body-rst
     (stream :: <stream>, packages :: <sequence>)
   for (package in packages)
     let pkg-name = package.pm/package-name;
-    format(stream, "* :doc:`%s/%s/index`", $packages-subdirectory, pkg-name);
+    format(stream, "* :doc:`%s <%s/index>`", pkg-name, pkg-name);
     let description = package.pm/package-description;
     if (description)
       // Remove newlines so the reST is valid.
@@ -99,8 +99,7 @@ define function generate-toctree-rst
     (stream :: <stream>, packages :: <sequence>)
   for (package in packages)
     let pkg-name = package.pm/package-name;
-    format(stream, "   %s <%s/%s/index>\n",
-           pkg-name, $packages-subdirectory, pkg-name);
+    format(stream, "   %s <%s/index>\n", pkg-name, pkg-name);
   end;
 end function;
 
@@ -111,7 +110,7 @@ end function;
 // generated.
 define function fetch-packages
     (output-dir :: <directory-locator>) => (packages :: <sequence>)
-  let package-dir = subdirectory-locator(output-dir, $packages-subdirectory);
+  let package-dir = subdirectory-locator(output-dir, $package-subdirectory);
   let all-packages
     = sort(pm/load-all-catalog-packages(pm/catalog()),
            test: method (a, b)

@@ -43,7 +43,7 @@ end function;
 
 define function gendoc
     (output-dir :: <directory-locator>)
-  dynamic-bind (dt_*verbose?* = #t)
+  dynamic-bind (deft-*verbose?* = #t)
     let packages = fetch-packages(output-dir);
     let root-index-file = file-locator(output-dir, $package-subdirectory, "index.rst");
     fs/with-open-file(stream = root-index-file,

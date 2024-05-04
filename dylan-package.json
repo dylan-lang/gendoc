@@ -1,7 +1,7 @@
 {
     "dependencies": [
         "command-line-parser",
-        "dylan-tool",
+        "deft",
     ],
     "category": "development tools",
     "dev-dependencies": [
@@ -11,5 +11,5 @@
     "description": "Generate docs for all Dylan catalog libraries",
     "name": "gendoc",
     "version": "0.1.0",
-    "url": "https://github.com/cgay/gendoc"
+    "url": "https://github.com/dylan-lang/gendoc"
 }

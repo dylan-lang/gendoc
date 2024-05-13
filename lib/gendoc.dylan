@@ -1,9 +1,9 @@
 Module: gendoc-impl
 
 
-/* To be documented: anaphora, atom-language-dylan, base64,
+/* To be documented: anaphora, atom-language-dylan,
    collection-extensions, command-interface, dylan-emacs-support, json,
-   lisp-to-dylan, lsp-dylan, mime, pacman-catalog, peg-parser, priority-queue,
+   lisp-to-dylan, mime, pacman-catalog, peg-parser, priority-queue,
    sequence-stream, serialization, shootout, skip-list, slot-visitor,
    sphinx-extensions (tools), uncommon-dylan, uri, uuid, vscode-dylan,
    web-framework, wrapper-streams, xml-parser, xml-rpc, zlib
@@ -12,17 +12,12 @@ Module: gendoc-impl
 
  */
 
-// The directory into which package docs are generated, with a subdirectory
-// for each package.  This is singular because it will show up in the URL
-// lik this: .../package/http/
-define constant $package-subdirectory = "package";
-
 define command-line <gendoc-command-line> ()
-  option output-directory :: <string>,
-    names: #("output-directory", "o"),
-    help: "Root directory of the generated output",
-    kind: <parameter-option>,
-    default: ".";
+  option index-file :: <string>,
+    names: #("index-file"),
+    help: "Pathname to the package/index.rst file in the opendylan repository checkout."
+            " This file will be modified to contain the package docs.",
+    kind: <positional-option>;
 end;
 
 define function main
@@ -31,86 +26,98 @@ define function main
                     help: "Generate docs for packages in the Dylan catalog");
   block ()
     parse-command-line(parser, application-arguments());
-    gendoc(as(<directory-locator>, output-directory(parser)))
+    gendoc(as(<file-locator>, parser.index-file))
   exception (err :: <abort-command-error>)
     let status = exit-status(err);
     if (status ~= 0)
-      format-err("Error: %s\n", err);
+      io/format-err("Error: %s\n", err);
     end;
     status
   end
 end function;
 
 define function gendoc
-    (output-dir :: <directory-locator>)
+    (root-index-file :: <file-locator>)
   dynamic-bind (deft-*verbose?* = #t)
-    let packages = fetch-packages(output-dir);
-    let root-index-file = file-locator(output-dir, $package-subdirectory, "index.rst");
+    let packages = fetch-packages(root-index-file.locator-directory);
+    let template = fs/with-open-file(stream = root-index-file)
+                     io/read-to-end(stream)
+                   end;
+    let body = generate-body-rst(packages);
+    let toctree = generate-toctree-rst(packages);
     fs/with-open-file(stream = root-index-file,
                       direction: #"output", if-exists?: #"replace")
-      io/write(stream, $header);
-      generate-body-rst(stream, packages);
-
-      io/write(stream, $toctree);
-      generate-toctree-rst(stream, packages);
+      // Be careful to write the markers back out to the file so that this code
+      // is idempotent. (Which is why the markers are RST comments.)
+      iterate loop (lines = as(<list>, split-lines(template)), drop-lines? = #f)
+        if (~empty?(lines))
+          let line = lines.head;
+          if (drop-lines?)
+            let keep? = starts-with?(line, ".. end-");
+            loop(if (keep?) lines else lines.tail end, ~keep?)
+          else
+            io/format(stream, "%s\n", line);
+            select (line by \=)
+              ".. begin-body" =>
+                io/write(stream, body);
+                loop(lines.tail, #t);
+              ".. begin-toctree" =>
+                io/write(stream, toctree);
+                loop(lines.tail, #t);
+              otherwise =>
+                loop(lines.tail, #f);
+            end;
+          end;
+        end;
+      end iterate;
     end;
-    format-out("Generated docs for %d packages.\n", packages.size);
+    io/format-out("Generated docs for %d packages.\n", packages.size);
   end;
 end function;
 
-define constant $header = """
-******************
-Dylan Package Docs
-******************
-
-Documentation for packages in the Dylan package catalog.
-
-.. note:: The documentation for some packages is still part of the Open Dylan
-   project, available in the `Library Reference
-   <https://opendylan.org/documentation/library-reference>`_.  Over time more
-   of those docs will be hosted here as they're moved into their own
-   repositories.
-
-""";
-
-define constant $toctree = """
-.. toctree::
-   :hidden:
-   :maxdepth: 1
-   :caption: Packages
-
-""";
-
 define function generate-body-rst
-    (stream :: <stream>, packages :: <sequence>)
-  for (package in packages)
-    let pkg-name = package.pm/package-name;
-    format(stream, "* :doc:`%s <%s/index>`", pkg-name, pkg-name);
-    let description = package.pm/package-description;
-    if (description)
-      // Remove newlines so the reST is valid.
-      format(stream, " - %s", join(split-lines(description), " "));
+    (packages :: <sequence>) => (body :: <string>)
+  io/with-output-to-string (stream)
+    io/format(stream, "\n");    // Need blank line after ".. begin-body" comment.
+    for (package in packages)
+      let pkg-name = package.pm/package-name;
+      io/format(stream, "* :doc:`%s <%s/index>`", pkg-name, pkg-name);
+      let description = package.pm/package-description;
+      if (description)
+        // Remove newlines so the reST is valid.
+        io/format(stream, " - %s", join(split-lines(description), " "));
+      end;
+      io/format(stream, "\n");
     end;
-    format(stream, "\n");
-  end;
+    io/format(stream, "\n");    // Need blank line before ".. end-body" comment.
+  end
 end function;
 
 define function generate-toctree-rst
-    (stream :: <stream>, packages :: <sequence>)
-  for (package in packages)
-    let pkg-name = package.pm/package-name;
-    format(stream, "   %s <%s/index>\n", pkg-name, pkg-name);
-  end;
+    (packages :: <sequence>) => (toctree :: <string>)
+  io/with-output-to-string (stream)
+    io/format(stream, """
+
+                      .. toctree::
+                         :hidden:
+                         :maxdepth: 1
+                         :caption: Packages\n\n
+                      """);
+    for (package in packages)
+      let pkg-name = package.pm/package-name;
+      io/format(stream, "   %s <%s/index>\n", pkg-name, pkg-name);
+    end;
+    io/format(stream, "\n");    // Need blank line before ".. end-toctree" comment.
+  end
 end function;
 
 // Fetch all packages in the pacman catalog. In order to simplify the
-// documentation URLs we remove the documentation/source/ part of the URL by
-// downloading to a temp directory and then renaming all files in
-// documentation/source/ to the package subdirectory where docs will be
-// generated.
+// documentation URLs to just /package/<pkg>/<name>.html we remove the
+// documentation/source/ part of the URL by downloading to a temp directory and
+// renaming all doc files in documentation/source/ to the package subdirectory
+// where docs will be generated.
 define function fetch-packages
-    (output-dir :: <directory-locator>) => (packages :: <sequence>)
-  let package-dir = subdirectory-locator(output-dir, $package-subdirectory);
+    (package-dir :: <directory-locator>) => (packages :: <sequence>)
   let all-packages
     = sort(pm/load-all-catalog-packages(pm/catalog()),
            test: method (a, b)
@@ -132,20 +139,29 @@ define function fetch-packages
     end;
     let release = %pm/find-release(package, pm/$latest);
     pm/download(release, scratch-subdir, update-submodules?: #f);
-    let source-dir = subdirectory-locator(scratch-subdir, "documentation", "source");
-    if (~fs/file-exists?(source-dir))
-      // TODO: Check for docs/source/ and doc/source/ as well.
-      format-out("%s: no documentation; skipping.\n", pkg-name);
-    else
-      add!(doc-packages, package);
-      fs/ensure-directories-exist(package-subdir);
-      for (file in fs/directory-contents(source-dir))
-        let dest = merge-locators(relative-locator(file, source-dir),
-                                  package-subdir);
-        fs/rename-file(file, dest);
-      end;
-    end;
-    force-out();
+
+    // For DPG, source/index.rst. For others, documentation/source/index.rst
+    iterate loop (files = list(file-locator(scratch-subdir, "source", "index.rst"),
+                               file-locator(scratch-subdir, "documentation", "source", "index.rst")))
+      if (empty?(files))
+        io/format-out("%s: no documentation; skipping.\n", pkg-name);
+      else
+        let index = head(files);
+        if (~fs/file-exists?(index))
+          loop(tail(files))
+        else
+          add!(doc-packages, package);
+          fs/ensure-directories-exist(package-subdir);
+          let src-dir = index.locator-directory;
+          for (file in fs/directory-contents(src-dir))
+            let dest = merge-locators(relative-locator(file, src-dir),
+                                      package-subdir);
+            fs/rename-file(file, dest);
+          end;
+        end;
+      end if
+    end iterate;
+    io/force-out();
   end;
   doc-packages
 end function;

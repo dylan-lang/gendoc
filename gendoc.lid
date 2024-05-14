@@ -1,3 +1,4 @@
 Library: gendoc
 Files: library.dylan
-       main.dylan
+       gendoc.dylan
+Target-Type: executable

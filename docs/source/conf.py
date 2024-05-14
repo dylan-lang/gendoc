@@ -9,7 +9,6 @@
 project = 'Dylan Package Documentation'
 copyright = '2024, Dylan Hackers'
 author = 'Dylan Hackers'
-release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -34,3 +33,6 @@ templates_path = ['_templates']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'furo'             # https://pradyunsg.me/furo/customisation/
+
+# Without this Furo adds the word "documentation" to the project name.
+html_title = project

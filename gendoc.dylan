@@ -1,5 +1,4 @@
-Module: gendoc-impl
-
+Module: gendoc
 
 /* To be documented: anaphora, atom-language-dylan,
    collection-extensions, command-interface, dylan-emacs-support, json,
@@ -165,3 +164,5 @@ define function fetch-packages
   end;
   doc-packages
 end function;
+
+main(application-name(), application-arguments())

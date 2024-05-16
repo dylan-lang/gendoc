@@ -9,7 +9,8 @@ catalog. How it works, in a nutshell:
 * Rename ``<pkg>/documentation/source/*`` to
   ``documentation/source/package/<pkg>/*`` so that URLs will look like
   ``/package/<pkg>/*``.
-* Modify ``docs/source/index.rst`` to list each package.
+* Modify ``docs/source/index.rst`` to list each package in the top-level
+  ``toctree`` directive.
 
 .. note:: The "docs" subdirectory in this repository is intentionally not named
           "documentation" in order to prevent gendoc itself from showing up in

@@ -100,7 +100,15 @@ define function generate-toctree-rst
                       .. toctree::
                          :hidden:
                          :maxdepth: 1
-                         :caption: Packages\n\n
+
+                         opendylan.org <https://opendylan.org>
+
+                      .. toctree::
+                         :hidden:
+                         :maxdepth: 1
+                         :caption: Packages
+
+
                       """);
     for (package in packages)
       let pkg-name = package.pm/package-name;

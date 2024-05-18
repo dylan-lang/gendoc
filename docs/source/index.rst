@@ -21,7 +21,6 @@ Documentation for packages listed in the Dylan package catalog.
 * :doc:`data-analysis <data-analysis/index>` - A collection of data analysis libraries
 * :doc:`deft <deft/index>` - Manage Dylan workspaces, packages, and registries
 * :doc:`dylan-programming-book <dylan-programming-book/index>` - The Dylan Programming guide (DPG)
-* :doc:`dylan-tool <dylan-tool/index>` - DEPRECATED - use deft instead
 * :doc:`hash-algorithms <hash-algorithms/index>` - SHA-1 and SHA-2 hashing
 * :doc:`http <http/index>` - HTTP client, server, and templating engine
 * :doc:`logging <logging/index>` - Logging library
@@ -45,6 +44,12 @@ Documentation for packages listed in the Dylan package catalog.
 .. toctree::
    :hidden:
    :maxdepth: 1
+
+   opendylan.org <https://opendylan.org>
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
    :caption: Packages
 
    base64 <base64/index>
@@ -55,7 +60,6 @@ Documentation for packages listed in the Dylan package catalog.
    data-analysis <data-analysis/index>
    deft <deft/index>
    dylan-programming-book <dylan-programming-book/index>
-   dylan-tool <dylan-tool/index>
    hash-algorithms <hash-algorithms/index>
    http <http/index>
    logging <logging/index>

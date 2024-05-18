@@ -27,8 +27,7 @@ To generate package docs in the :file:`docs/source` directory::
    $ cd gendoc
    $ dylan update
    $ dylan build -a
-   $ _build/bin/gendoc --excludes-file excludes.txt docs/source/index.rst
-
-See `opendylan/documentation/README.rst
-<https://github.com/dylan-lang/opendylan/blob/master/documentation/README.rst>`_
-for details on how to build the full website including the package docs.
+   $ _build/bin/gendoc --excludes-file exclude-list.txt docs/source/index.rst
+   $ cd docs
+   $ make html
+   $ rsync -av _build/html/ /var/www/package.opendylan.org/

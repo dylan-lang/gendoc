@@ -5,11 +5,11 @@ Dylan Package Documentation
 Documentation for packages listed in the Dylan package catalog.
 
 .. note:: The documentation for some packages is still part of the Open Dylan
-   project, available in the `Library Reference </library-reference/>`_.  Over
-   time more of those docs will be hosted here as they're moved into their own
-   repositories.
+   project, available in the `Library Reference
+   <https://opendylan.org/library-reference/>`_.  Over time more of those docs
+   will be hosted here as they're moved into their own packages.
 
-.. Text between the markers is replaced by :program:`package-doc-generator`.
+.. Text between the markers is replaced by :program:`gendoc`.
 
 .. begin-body
 

@@ -9,8 +9,7 @@ exec > $logfile 2>&1
 
 export PATH=/root/dylan/bin:/opt/opendylan/bin:/opt/python3-venv/bin:${PATH}
 
-exe_dir="$(realpath $(dirname $0))"
-gendoc_dir="$(dirname ${exe_dir})"
+gendoc_dir="$(realpath $(dirname $0))"
 dest_dir=/var/www/package.opendylan.org
 
 # Update gendoc first so we get any changes to the update.sh script.
@@ -18,7 +17,7 @@ cd "${gendoc_dir}"
 
 git pull --rebase --tags origin main
 
-${exe_dir}/update.sh "${dest_dir}"
+${gendoc_dir}/update.sh "${dest_dir}"
 
 echo "Done updating package.opendylan.org"
 bzip2 $logfile

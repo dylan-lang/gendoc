@@ -39,5 +39,9 @@ dylan update
 echo "Building gendoc ..."
 dylan build gendoc
 
+_build/bin/gendoc --excludes-file exclude-list.txt docs/source/index.rst
+cd docs
+make html
+
 echo "Copying package docs to ${dest_dir} ..."
 rsync -av ${gendoc_dir}/docs/_build/html/ ${dest_dir}

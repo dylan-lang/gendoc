@@ -20,6 +20,7 @@ extensions = [
     'dylan.domain',
     'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
+    'sphinx_copybutton',
 ]
 primary_domain = 'dylan'
 exclude_patterns = [

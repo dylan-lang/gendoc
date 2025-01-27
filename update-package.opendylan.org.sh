@@ -15,6 +15,7 @@ dest_dir=/var/www/package.opendylan.org
 # Update gendoc first so we get any changes to the update.sh script.
 cd "${gendoc_dir}"
 
+git checkout -- .               # cleanup after previous run.
 git pull --rebase --tags origin main
 
 ${gendoc_dir}/update.sh "${dest_dir}"
